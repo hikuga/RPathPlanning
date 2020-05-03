@@ -39,11 +39,13 @@ void RoutePlanner::AddNeighbors(RouteModel::Node *current_node) {
         return;
     current_node->FindNeighbors();
     for_each(begin(current_node->neighbors), end(current_node->neighbors), [&](RouteModel::Node* elem){
+        if(!elem->visited){
         elem->parent = current_node;
         elem->g_value = current_node->g_value + 1;
         elem->h_value = CalculateHValue(elem);
-        this->open_list.emplace_back(elem);
         elem->visited = true;
+        this->open_list.emplace_back(elem);
+        }
     });
 
 }
@@ -59,7 +61,7 @@ void RoutePlanner::AddNeighbors(RouteModel::Node *current_node) {
 RouteModel::Node *RoutePlanner::NextNode() {
   //TODO why sort over and over agian.
     std::sort(begin(this->open_list), end(this->open_list), [&](RouteModel::Node* elem1, RouteModel::Node* elem2){
-        return (elem1->g_value+elem1->h_value) < (elem2->g_value+elem2->h_value);
+        return (elem1->g_value+elem1->h_value) > (elem2->g_value+elem2->h_value);
     });
     RouteModel::Node* last = this->open_list.back();
     this->open_list.pop_back();
