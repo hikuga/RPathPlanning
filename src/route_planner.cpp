@@ -35,13 +35,13 @@ float RoutePlanner::CalculateHValue(RouteModel::Node const *node) {
 // - For each node in current_node.neighbors, add the neighbor to open_list and set the node's visited attribute to true.
 
 void RoutePlanner::AddNeighbors(RouteModel::Node *current_node) {
-    if(!current_node)
+    if(current_node == nullptr)
         return;
     current_node->FindNeighbors();
     for_each(begin(current_node->neighbors), end(current_node->neighbors), [&](RouteModel::Node* elem){
         if(!elem->visited){
         elem->parent = current_node;
-        elem->g_value = current_node->g_value + 1;
+        elem->g_value = current_node->g_value + current_node->distance(*elem);
         elem->h_value = CalculateHValue(elem);
         elem->visited = true;
         this->open_list.emplace_back(elem);
@@ -91,6 +91,7 @@ std::vector<RouteModel::Node> RoutePlanner::ConstructFinalPath(RouteModel::Node 
         path_found.emplace_back(*current_node);
         current_node = current_node->parent;
     }
+    path_found.emplace_back(*current_node);
     distance *= m_Model.MetricScale(); // Multiply the distance by the scale of the map to get meters.
     return {rbegin(path_found), rend(path_found)};
 
@@ -106,15 +107,26 @@ std::vector<RouteModel::Node> RoutePlanner::ConstructFinalPath(RouteModel::Node 
 
 void RoutePlanner::AStarSearch() {
     RouteModel::Node *current_node = start_node;
-
+    open_list.push_back(start_node);
+    start_node->visited = true;
     // TODO: Implement your solution here.
-    while(current_node != end_node){
+    while(open_list.size() ){
+     //   if(current_node->parent == nullptr){
+       //     std::cout << "\n No path found";
+         //   return;
+        //}
+        current_node->visited = true;
+        if(current_node->distance(*end_node) == 0){
+            m_Model.path = this->ConstructFinalPath(end_node);
+            return;
+        }
         //populate open list with neighbors
         this->AddNeighbors(current_node);
         current_node = this->NextNode();
+        
         // check for no path cases
     }
     
-    m_Model.path = this->ConstructFinalPath(end_node);
+    
 
 }
